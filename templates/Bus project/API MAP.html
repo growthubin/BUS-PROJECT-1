@@ -1,7 +1,8 @@
+<!Doctype html>
 {% load static %}
-<!doctype html>
 <html lang="ko">
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"> </script>
 
 {% include 'Bus project//head.html' %}
 
@@ -14,7 +15,7 @@
 {#  검색 창 header #}
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
   <div class="container-fluid" style="padding-right: 800px">
-    <a class="navbar-brand" href="#"><a><img src="https://i.ibb.co/VgymkTx/logo.png" alt="logo" border="0" style="width: 250px;"></a>
+    <a class="navbar-brand" href="#"><img src="https://i.ibb.co/VgymkTx/logo.png" alt="logo" border="0" style="width: 250px;"></a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -31,7 +32,7 @@
 </nav>
 {#    웹페이지 설명#}
     <div style="position : relative;">
-         <div class="green_box"></div>
+         <div class="green_box"> </div>
     <section class="article-detail table-common con ">
         <table class="cell" >
             <tbody>
@@ -62,7 +63,26 @@
     </form>
     </div>
     <div style="width: 1200px; height: 600px; background: gold">API넣기</div>
-    <div style="width: 430px; height: 600px; border: solid 1px black;">댓글창 만들기 + 로고 넣기</div>
+    <div style="width: 430px; height: 600px; border: solid 1px black;">댓글창 만들기 + 로고 넣기
+        {{ feed.name }}
+        <textarea calss=" replyContent" placeholder="댓글입력"></textarea>
+        <input type = "button" calss="btnReply" value ="전송">
+    </div>
+    <div>
+      <table border="1" class="replyTable">
+          <tr>
+              <td>내용</td>
+          </tr>
+          <tbody class = "replyTable">
+            {%  for item in reply %}
+            <tr>
+                <td>{{ item.feed.name }}</td>
+                <td>{{ item.content }}</td>
+            </tr>
+          </tbody>
+          {%  endfor %}
+      </table>
+    </div>
   </div>
 
     <!-- Optional JavaScript; choose one of the two! -->
@@ -77,3 +97,36 @@
     -->
   </body>
 </html>
+
+<script>
+    let btnReply = document.querySelector('.btnReply')
+    btnReply.addEventListener('click', function(event){
+        let content = document.querySelectorAll('.replyContent').values();
+        let param = {
+            'feedId':'{{ feed.id }}',
+            'content':content,
+        }
+    $.ajax({
+        url: '{%  url 'reply' %}',
+        type : 'POST',
+        headers:{
+            'X-CSRFTOKEN' : '{{ csrf_token }}'
+        },
+        data : JSON.stringify(param),
+        success: function (data){
+            console.log(data);
+            let replyTable = document.querySelector('.replyTbody');
+            let newTr =document.createElement('tr')
+            let str =
+                <td>${data.name}</td>
+                <td>${data.content}</td>;
+            newTr.innerHTML= str;
+            replyTable=prepend(newTr);
+        },
+        error :function (){
+            alert('error ')
+        }
+    });
+
+    });
+</script>
