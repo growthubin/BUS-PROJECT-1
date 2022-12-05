@@ -1,32 +1,34 @@
-from django.shortcuts import  render , redirect
+from django.shortcuts import render, redirect, get_object_or_404
 import json
 from django.http import JsonResponse
-from .models import Reply
+from .models import Reply, Feed
 
 # Create your views here.
 def reply(request):
-    jsonObject = json.loads(request.body)
+    json_object = json.loads(request.body)
+
     reply = Reply.objects.create(
-        feed_id=jsonObject.get('feedid'),
-        content=jsonObject.get('content'))
+        feed_id=json_object.get('feedId'),
+        content=json_object.get('content'),
+    )
     reply.save()
     context = {
-        'name': reply.feed.name,
         'content': reply.content,
-
     }
 
-    return JsonResponse(context);
+    return JsonResponse(context)
 
-def detail(request,feedid):
-    feed = get_object_or_404(Feed,pk=feedid)
-    reply = Reply.objects.filter(feed_id=feedid)
+def detail( request, feedid):
+    feed = get_object_or_404(Feed, pk=feedid)
+
+    reply = Reply.objects.filter(feed_id=feedid, null=True)
     try:
         session = request.session['feedid']
         context = {
-            'feed':feed,
-            'reply':reply
+            'feed': feed,
+            'reply': reply,
+            'session': session,
         }
         return render(request, 'API MAP.html', context)
     except KeyError:
-        return redirect('main')
+        return redirect('Main.html')
