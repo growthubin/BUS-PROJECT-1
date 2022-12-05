@@ -67,7 +67,6 @@
     <div style="width: 1500px; height: 600px; background: gold">API넣기</div>
     <div style="width: 350px; height: 600px; border: solid 1px black;">
         <label>
-            {{ feed.name }}
             <textarea calss="replyContent" placeholder="댓글 입력"></textarea>
             <button class="btnReply" type="submit">전송</button>
 {#            <input type = "button" calss="btnReply" value ="전송">#}
@@ -106,7 +105,6 @@
     let btnReply = document.querySelector('.btnReply');
     btnReply.addEventListener("click" , function () {
         let content = document.querySelectorAll('.replyContent').values();
-
         let param = {
             'feedId':'{{ feed.id }}',
             'content': content,
