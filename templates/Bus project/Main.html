@@ -3,7 +3,7 @@
 <html lang="ko">
 
 
-{% include 'Bus project//head.html' %}
+{% include 'Bus project/head.html' %}
 
  <!-- DEFAULT CSS LINK -->
     <link rel="stylesheet" type="text/css" href="{% static 'base.css' %} ">
@@ -12,47 +12,104 @@
 
 
 <body>
+짜증
   <div class="container-fluid" style="justify-content: space-between">
       <a><img src="https://i.ibb.co/VgymkTx/logo.png" alt="logo" border="0" style="width: 250px;"></a>
   </div>
   <div style="text-align: center;">
       <p style="font-size: 50px;">어디로 떠날까요?</p>
 {#      검색창#}
-      <div class="search-bar">
-          <i class="fas fa-search"></i>
-          <input class="search-bar__input" type="search" placeholder="검색" />
-        </div>
+      <div class="search-bar" style="border: 30px;">
 
+          <form method="get" action="{% url 'searchResult' %}">
+              {% csrf_token %}
+              <i class="fas fa-search"></i>
+              <input class="search-bar__input" type="search"
+                     style="width: 30%; height: 40px; border-radius: 20px; padding-inline-start: 20px;" placeholder="검색"
+                     name="kw">
+          </form>
+      </div>
+{#다혜 멍청이#}
   </div>
 {#  텍스트#}
   <div>
 
   </div>
 
-  <div  style=" padding-right: 83px; center; display: flex; justify-content: space-between; padding-left: 83px;">
+  <div  style=" padding-right: 83px; display: flex; justify-content: space-between; padding-left: 83px;">
       <div ><h1><p class="regular" style="font-size : 30px;">추천하는 장소</p></h1></div>
       <div><button class="w-btn w-btn-green2" type="button">필터</button></div>
   </div>
 {#  #}
+
   <div class="container-fluid" style="display: inline-flex; justify-content: space-evenly; flex-wrap: wrap;">
-      <div style="position: relative; width: 550px; height: 550px; padding: 1px 1px 2px 3px;  ">
-          <div class="star"><span class="material-symbols-outlined" style="font-size: 50px;">star</span></div>
-          <div> <img src="https://post-phinf.pstatic.net/MjAxOTExMDRfNDYg/MDAxNTcyODQ3OTAzNjMx.JA4Rezq3Vab4NteKLPm8qP-wIjJnSLK6QRJOg14QLRUg.BjlGsZFgWM58iGhRIY7_fmvJgI60nxnIeQoFfhIycCog.JPEG/KakaoTalk_20191104_150915996.jpg?type=w1200" width="530px" height = "515px" class="rec_pic"> </div>
-          <div class="green_box"></div>
-          <div class = "text_box"><k>안녕 인사동</k></div>
-      </div>
-      <div style="position: relative; width: 550px; height: 550px; padding: 1px 1px 2px 3px;  ">
-          <div class="star"><span class="material-symbols-outlined" style="font-size: 50px;">star</span></div>
-          <div> <img src="https://post-phinf.pstatic.net/MjAxOTExMDRfNDYg/MDAxNTcyODQ3OTAzNjMx.JA4Rezq3Vab4NteKLPm8qP-wIjJnSLK6QRJOg14QLRUg.BjlGsZFgWM58iGhRIY7_fmvJgI60nxnIeQoFfhIycCog.JPEG/KakaoTalk_20191104_150915996.jpg?type=w1200" width="530px" height = "515px" class="rec_pic"> </div>
-          <div class="green_box"></div>
-          <div class = "text_box"><k>안녕 인사동</k></div>
-      </div>
-      <div style="position: relative; width: 550px; height: 550px; padding: 1px 1px 2px 3px;  ">
-          <div class="star"><span class="material-symbols-outlined" style="font-size: 50px;">star</span></div>
-          <div> <img src="https://post-phinf.pstatic.net/MjAxOTExMDRfNDYg/MDAxNTcyODQ3OTAzNjMx.JA4Rezq3Vab4NteKLPm8qP-wIjJnSLK6QRJOg14QLRUg.BjlGsZFgWM58iGhRIY7_fmvJgI60nxnIeQoFfhIycCog.JPEG/KakaoTalk_20191104_150915996.jpg?type=w1200" width="530px" height = "515px" class="rec_pic"> </div>
-          <div class="green_box"></div>
-          <div class = "text_box"><k>안녕 인사동</k></div>
-      </div>
+      {% for feed in feeds %}
+          <div style="position: relative; width: 550px; height: 550px; padding: 1px 1px 2px 3px;  ">
+              <div class="star"><span class="material-symbols-outlined" style="font-size: 50px;">star</span></div>
+              <div class="place">
+
+                  <form method="get" action="{% url 'searchResult' %}">
+                      {% csrf_token %}
+
+                      <img src="{{ feed.image }}" width="530px" height="515px" class="rec_pic">
+
+                  </form>
+
+              </div>
+
+
+
+              {% if feed.conv == 'g' %}
+                  <div class="green_box"></div>
+              {% elif feed.conv == 'y' %}
+                  <div class="yellow_box"></div>
+              {% else %}
+                  <div class="red_box"></div>
+              {% endif %}
+
+          {# a태그로 해결#}
+              <div class="text_box">
+                  <form method="get" action="{% url 'searchResult' %}">
+                      {% csrf_token %}
+                      <k>{{ feed.name }}</k>
+                      {# <button type="button" class="btn btn-light" style="background-color: white" name="kw"> {{ feed.name }}</button> #}
+                        {# 나는 포트 번호가 8001이라서 이렇게 했는데 다른사람들 자기 포트번호대로 바꿔주면 됨니다#}
+                      <a href="http://127.0.0.1:8001/search/?csrfmiddlewaretoken=7lmcmMjgegwasER2cbpmC5a9R3K66Ir88585PAsa7CjLaX6rMywp0SzLb6OmWWAp&kw={{ feed.name }}" style="text-decoration: none ; color: rgba(127,211,199) ; font-family: 'Comic Sans MS' " >   Let's go</a>
+
+                  </form>
+              </div>
+
+
+
+          </div>
+      {% endfor %}
+
+
+      <script>
+          //검색어 누르고 엔터키
+          $(document).ready(function () {
+
+              $(".search-bar__input").keydown(function (key) {
+                  if (key.keyCode == 13) {
+
+
+                      location.href = '{% url 'searchResult' %}'
+
+
+                  }
+              });
+          });
+
+
+          $('.text_box').on('click', () => {
+
+              location.href = '{% url 'searchResult' %}'
+
+          });
+
+
+      </script>
+
   </div>
 
 

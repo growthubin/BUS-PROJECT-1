@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=mrc6y6yoti&submodules=geocoder"></script>
+	<script  src="http://code.jquery.com/jquery-latest.min.js"></script>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-2.2.4.min.js"></script>
+     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+<div class="search">
+	<input  id="address_first" type="text" name = "address_first" placeholder="검색할 주소">
+	<input id="submit" type="button" value="주소검색">
+</div>
+<div id="map" style="width:1000px;height:500px;"></div>
+<div>
+	<table>
+		<thead>
+			<tr>
+				<th>주소</th>
+				<th>위도</th>
+				<th>경도</th>
+			</tr>
+		</thead>
+		<tbody id="mapList"></tbody>
+	</table>
+</div>
+</body>
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script>
+//지도를 그려주는 함수 실행
+
+
+var max_loc = new naver.maps.LatLngBounds(
+    new naver.maps.LatLng(37.54, 126.90), //중구 서대문구 종로구
+    new naver.maps.LatLng(37.63, 127.02));
+
+var map = new naver.maps.Map("map", {
+    minZoom: 13, // 구 레벨
+    maxBounds: max_loc,
+});
+
+var polyline = new naver.maps.Polyline({
+    map: map,
+    path: [],
+    strokeColor: '#5347AA',
+    strokeWeight: 2
+});
+
+window.onload = function(){
+    document.getElementById("address_first").addEventListener("click", function(){ //주소입력칸을 클릭하면
+        //카카오 지도 발생
+        new daum.Postcode({
+            oncomplete: function(data) { //선택시 입력값 세팅
+                document.getElementById("address_first").value = data.address; // 주소 넣기
+                document.querySelector("input[name=address_detail]").focus(); //상세입력 포커싱
+            }
+        }).open({autoClose: true});
+    });
+}
+
+
+//검색한 주소의 정보를 insertAddress 함수로 넘겨준다.
+function searchAddressToCoordinate(address_first) {
+    naver.maps.Service.geocode({
+        query: address_first
+    }, function(status, response) {
+        if (status === naver.maps.Service.Status.ERROR) {
+            return alert('Something Wrong!');
+        }
+        if (response.v2.meta.totalCount === 0) {
+            return alert('올바른 주소를 입력해주세요.');
+        }
+        var htmlAddresses = [],
+            item = response.v2.addresses[0],
+            point = new naver.maps.Point(item.x, item.y);
+        if (item.roadAddress) {
+            htmlAddresses.push('[도로명 주소] ' + item.roadAddress);
+        }
+        if (item.jibunAddress) {
+            htmlAddresses.push('[지번 주소] ' + item.jibunAddress);
+        }
+        if (item.englishAddress) {
+            htmlAddresses.push('[영문명 주소] ' + item.englishAddress);
+        }
+
+        insertAddress_first(item.roadAddress, item.x, item.y);
+
+    });
+}
+
+// 주소 검색의 이벤트
+$('#address_first').on('keydown', function(e) {
+    var keyCode = e.which;
+    if (keyCode === 13) { // Enter Key
+        searchAddressToCoordinate($('#address_first').val());
+        $('#address').val('');
+    }
+});
+$('#submit').on('click', function(e) {
+    e.preventDefault();
+    searchAddressToCoordinate($('#address_first').val());
+    $('#address').val('');
+});
+
+
+
+
+//검색정보를 테이블로 작성해주고, 지도에 마커를 찍어준다.
+function insertAddress_first(address_first, latitude, longitude) {
+    var mapList = "";
+	mapList += "<tr>"
+	mapList += "	<td>" + address_first + "</td>"
+	mapList += "	<td>" + latitude + "</td>"
+	mapList += "	<td>" + longitude + "</td>"
+	mapList += "</tr>"
+
+	$('#mapList').append(mapList);
+
+	var first_point = new naver.maps.LatLng(longitude, latitude);
+
+    var path = polyline.getPath();
+    path.push(first_point); //시작점
+
+    new naver.maps.Marker({
+        map: map,
+        position: first_point
+    });
+
+}
+
+</script>
+
+
+</html>

@@ -12,58 +12,78 @@
 
   <body>
 {#  검색 창 header #}
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-  <div class="container-fluid" style="padding-right: 800px">
-    <a class="navbar-brand" href="#"><a><img src="https://i.ibb.co/VgymkTx/logo.png" alt="logo" border="0" style="width: 250px;"></a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        </li>
-      </ul>
-      <form class="d-flex">
-        <input class="form-control me-2" type="search" placeholder="목적지" aria-label="Search">
-        <button class="btn btn-outline-success" type="submit">submit</button>
-      </form>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid" style="padding-right: 800px">
+        <a class="navbar-brand" href="#"></a><img src="https://i.ibb.co/VgymkTx/logo.png" alt="logo" border="0"
+                                                 style="width: 250px;">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    </li>
+                </ul>
+                <form class="d-flex">
+                    <input class="form-control me-2" type="search" placeholder="{{ query }}" aria-label="Search">
+                    <button class="btn btn-outline-success" type="submit">submit</button>
+                </form>
+            </div>
     </div>
-  </div>
 </nav>
 {#    웹페이지 설명#}
+{% for feed in feeds1 %}
     <div style="position : relative;">
-         <div class="green_box"></div>
-    <section class="article-detail table-common con ">
-        <table class="cell" >
-            <tbody>
+
+        {% if feed.conv == 'g' %}
+            <div class="green_box"></div>
+        {% elif feed.conv == 'y' %}
+            <div class="yellow_box"></div>
+        {% else %}
+            <div class="red_box"></div>
+        {% endif %}
+
+        <section class="article-detail table-common con ">
+            <table class="cell">
+                <tbody>
 
                 <tr class="article-title">
-                    <td colspan="3">창경궁 </td>
+                    <td colspan="3">{{ feed.name }}</td>
                 </tr>
 
                 <tr class="article-body">
-                    <td colspan="4">성종 14년(1483)에 세조비 정희왕후, 예종비 안순왕후, 덕종비 소혜왕후 세분의 대비를 모시기 위해 옛 수강궁터에 창건한 궁</td>
+                    <td colspan="4">{{ feed.explain }}</td>
+                    <td colspan="4">{{ feed.detail }}</td>
                 </tr>
-            </tbody>
-        </table>
-    </section>
+
+                </tbody>
+            </table>
+        </section>
     </div>
+
+{% endfor %}
 
 <h1>저상버스로 가는 길찾기</h1>
 {#API넣어둘 창은 왼쪽 / 댓글창은 오른쪽#}
-  <div style="display: flex; flex-direction: row; text-align: center;">
-    <div class = "flex-container" style="width: 300px; height: 600px;">
-    <form class="d-flex">
-        <input class="form-control me-2" type="search" placeholder="출발지" aria-label="Search">
-        <button class="btn btn-outline-success" type="submit">submit</button>
-    </form>
-    <form class="d-flex">
-        <input class="form-control me-2" type="search" placeholder="도착지" aria-label="Search">
-        <button class="btn btn-outline-success" type="submit">submit</button>
-    </form>
+
+{% for feed in feeds1 %}
+    <div style="display: flex; flex-direction: row; text-align: center;">
+
+        <div class="flex-container" style="width: 300px; height: 600px;">
+            <form class="d-flex">
+                <input class="form-control me-2" type="search" placeholder="출발지" aria-label="Search">
+                <button class="btn btn-outline-success" type="submit">submit</button>
+            </form>
+            <form class="d-flex">
+                <input class="form-control me-2" type="search" placeholder= "{{ feed.address }}" aria-label="Search">
+                <button class="btn btn-outline-success" type="submit">submit</button>
+            </form>
+        </div>
+        <div style="width: 1200px; height: 600px; background: gold">API넣기</div>
+        <div style="width: 430px; height: 600px; border: solid 1px black;">댓글창 만들기 + 로고 넣기</div>
     </div>
-    <div style="width: 1200px; height: 600px; background: gold">API넣기</div>
-    <div style="width: 430px; height: 600px; border: solid 1px black;">댓글창 만들기 + 로고 넣기</div>
-  </div>
+{% endfor %}
 
     <!-- Optional JavaScript; choose one of the two! -->
 
