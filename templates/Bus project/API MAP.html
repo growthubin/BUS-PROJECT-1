@@ -5,31 +5,31 @@
 
 {% include 'Bus project//head.html' %}
 
- <!-- DEFAULT CSS LINK -->
-    <link rel="stylesheet" type="text/css" href="{% static 'style.css' %} ">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css">
+<!-- DEFAULT CSS LINK -->
+<link rel="stylesheet" type="text/css" href="{% static 'style.css' %} ">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css">
 
 
-  <body>
+<body>
 {#  검색 창 header #}
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container-fluid" style="padding-right: 800px">
         <a class="navbar-brand" href="#"></a><img src="https://i.ibb.co/VgymkTx/logo.png" alt="logo" border="0"
-                                                 style="width: 250px;">
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    </li>
-                </ul>
-                <form class="d-flex">
-                    <input class="form-control me-2" type="search" placeholder="{{ query }}" aria-label="Search">
-                    <button class="btn btn-outline-success" type="submit">submit</button>
-                </form>
-            </div>
+                                                  style="width: 250px;">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                </li>
+            </ul>
+            <form class="d-flex">
+                <input class="form-control me-2" type="search" placeholder="{{ query }}" aria-label="Search">
+                <button class="btn btn-outline-success" type="submit">submit</button>
+            </form>
+        </div>
     </div>
 </nav>
 {#    웹페이지 설명#}
@@ -71,82 +71,327 @@
     <div style="display: flex; flex-direction: row; text-align: center;">
 
         <div class="flex-container" style="width: 300px; height: 600px;">
+            <!-- 주소 검색 -->
+            {#            <div style="margin-top: 30px">#}
+            {#                <div>#}
+            {#                    <input id="address_start" type="text" placeholder="출발지 주소">#}
+            {#                </div>#}
+            {#                <div>#}
+            {#                    <input id="address_arrive" type="text" placeholder="도착지 주소">#}
+            {#                </div>#}
+            {#                <input id="submit" type="button" value="주소 검색">#}
+            {#            </div>#}
+
+            <!-- 출발지 입력 -->
             <form class="d-flex">
-                <input class="form-control me-2" type="search" placeholder="출발지" aria-label="Search">
-                <button class="btn btn-outline-success" type="submit">submit</button>
+                <input class="form-control me-2 address" id="address_start" type="text" placeholder="출발지"
+                       aria-label="Search">
+                <button class="btn btn-outline-success" id="submit" type="button">submit</button>
             </form>
+            <!-- Let's go 클릭해서 들어오면 도착지는 버튼 삭제함. 길찾기 홈페이지는 두 번 제출하는 식으로 할듯? -->
             <form class="d-flex">
-                <input class="form-control me-2" type="search" placeholder= "{{ feed.address }}" aria-label="Search">
-                <button class="btn btn-outline-success" type="submit">submit</button>
+                <input class="form-control me-2 address" id="address_arrive" type="text" value="{{ feed.address }}"
+                       aria-label="Search" readonly/>
             </form>
         </div>
-        <div style="width: 1200px; height: 600px; background: gold">API넣기</div>
+
+        <!-- DOM(div) 컨테이너의 크기로 지도 크기를 설정 -->
+        <div id="map" style="width:100%;height:400px;"></div>
         <div style="width: 350px; height: 600px; border: solid 1px black;">
-        <label>
-            <textarea calss="replyContent" placeholder="댓글 입력"></textarea>
-            <button class="btnReply" type="submit">전송</button>
-        </label>
-    </div>
-    <div style= "width: 350px; padding :10px 0 15px 0 ; border: solid 1px black;">
-      <table border = "1" class="replyTable">
-          <tr>
-              <td>내용</td>
-          </tr>
-          <tbody class = "replyTbody" typeof="string">
-            {%  for item in reply %}
-            <tr>
-                <td>{{ item.content }}</td>
-            </tr>
-          </tbody>
-          {%  endfor %}
-      </table>
-    </div>
+            <label>
+                <textarea class="replyContent" placeholder="댓글 입력"></textarea>
+                <button class="btnReply" type="submit">전송</button>
+            </label>
+        </div>
+        <div style="width: 350px; padding :10px 0 15px 0 ; border: solid 1px black;">
+            <table border="1" class="replyTable">
+                <tr>
+                    <td>내용</td>
+                </tr>
+                <tbody class="replyTbody" typeof="string">
+                {% for item in reply %}
+                    <tr>
+                        <td>{{ item.content }}</td>
+                    </tr>
+                    </tbody>
+                {% endfor %}
+            </table>
+        </div>
     </div>
 {% endfor %}
 
-    <!-- Optional JavaScript; choose one of the two! -->
 
-    <!-- Option 1: Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 
-    <!-- Option 2: Separate Popper and Bootstrap JS -->
-    <!--
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
-    -->
-   <script>
-        let btnReply = document.querySelector('.btnReply');
-        btnReply.addEventListener("click" , function () {
-            let content = document.getElementsByTagName('textarea')[0].value;
-            alert(content);
-            {#let content = document.querySelectorAll('.replyContent').values();#}
-            let param = {
-                'feedId':'{{ feed.id }}',
-                'content': content,
-            }
+
+
+<div>
+    <div style="font-size: larger; margin-top: 10px">
+        <b>-길찾기 정보</b>
+    </div>
+    <!-- OSRM API 응답 -->
+    <div class="osrmResponse">
+        <div>
+            총 거리 및 소요 시간
+            <br>
+            <span id="totalDistance"></span>
+            <br>
+            <span id="totalDuration"></span>
+        </div>
+        <div style="font-size: larger; font-weight: bold; margin-top: 10px">
+            -Waypoint(위도, 경도)
+        </div>
+        <table>
+            <thead>
+            <tr>
+                <th>순번</th>
+                <th>좌표</th>
+            </tr>
+            </thead>
+            <tbody class="waypoints"></tbody>
+            {# 나중에 append할 것임 #}
+        </table>
+
+    </div>
+</div>
+
+<!-- Optional JavaScript; choose one of the two! -->
+
+<!-- Option 1: Bootstrap Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+
+<!-- Option 2: Separate Popper and Bootstrap JS -->
+<!--
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
+-->
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script>
+    let btnReply = document.querySelector('.btnReply');
+    btnReply.addEventListener("click", function () {
+        let content = document.getElementsByTagName('textarea')[0].value;
+        alert(content);
+        {#let content = document.querySelectorAll('.replyContent').values();#}
+        let param = {
+            'feedId': '{{ feed.id }}',
+            'content': content,
+        }
         $.ajax({
             url: '{%  url 'reply' %}',
-            type : 'POST',
-            headers:{
-                'X-CSRFTOKEN' : '{{ csrf_token }}'
+            type: 'POST',
+            headers: {
+                'X-CSRFTOKEN': '{{ csrf_token }}'
             },
-            dataType:"json",
-            data : JSON.stringify(param),
+            dataType: "json",
+            data: JSON.stringify(param),
 
-            success: function ( data ) {
+            success: function (data) {
                 console.log(data);
                 let replyTable = document.querySelector('.replyTbody');
-                let newTr =document.createElement('tr');
-                let str =` <td>${data.content}</td>`;
-                newTr.innerHTML= str ;
+                let newTr = document.createElement('tr');
+                let str = ` <td>${data.content}</td>`;
+                newTr.innerHTML = str;
                 replyTable.prepend
                 (newTr);
             },
-            error :function (){
+            error: function () {
                 alert('error');
             }
         });
-      });
-    </script>
-  </body>
+    });
+
+    // Naver API - OSRM API
+    var max_loc = new naver.maps.LatLngBounds(
+        new naver.maps.LatLng(37.54, 126.90), //중구 서대문구 종로구
+        new naver.maps.LatLng(37.63, 127.02));
+
+    var map = new naver.maps.Map("map", {
+        minZoom: 13, // 구 레벨
+        maxBounds: max_loc,
+    });
+
+    var polyline = new naver.maps.Polyline({
+        map: map,
+        path: [],
+        strokeColor: '#5347AA',
+        strokeWeight: 2
+    });
+
+    var starter = []
+
+    var finisher = []
+
+    arrive_place = new {{ feed.address }}
+
+    // 주소 입력 후 submit 연쇄 작용 시작..
+    $('#submit').on('click', function (e) {
+        e.preventDefault();
+        var address = [$('#address_start').val(), $('#address_arrive').val()];  // 최신 입력이 먼저 들어가서
+        searchAddressToCoordinate(address);
+    });
+
+    //다음 포스트 코드
+    $('#address_start').on('click', function (e) {
+        new daum.Postcode({
+            oncomplete: function (data) { //선택시 입력값 세팅
+                document.getElementById("address_start").value = data.address; // 주소 넣기
+                {#document.querySelector("input[name=address_detail]").focus(); //상세입력 포커싱#}
+            }
+        }).open({autoClose: true});
+    });
+    window.onload = function () {
+        document.getElementById("address_arrive").addEventListener("click", function () { //주소입력칸을 클릭하면
+            //카카오 지도 발생
+            new daum.Postcode({
+                oncomplete: function (data) { //선택시 입력값 세팅
+                    document.getElementById("address_arrive").value = data.address; // 주소 넣기
+                    {#document.querySelector("input[name=address_detail]").focus(); //상세입력 포커싱#}
+                }
+            }).open({autoClose: true});
+        });
+    }
+
+    // 주소 검색하는 부분(실질적인 로직) -> insertAddress 함수로 넘겨줌.
+    function searchAddressToCoordinate(address) {
+        var start_lat = '';
+        var start_lon = '';
+        var arrive_lat = '';
+        var arrive_lon = '';
+
+        for (let i = 0; i < 2; i++) {
+            naver.maps.Service.geocode({
+                query: address[i]
+            }, function (status, response) {
+                if (status === naver.maps.Service.Status.ERROR) { // 그냥 서버가 에러
+                    return alert('Something Wrong!');
+                }
+                if (response.v2.meta.totalCount === 0) { //검색 결과 없을 때
+                    return alert('올바른 주소를 입력해주세요.');
+                }
+                var htmlAddresses = [],
+                    item = response.v2.addresses[0],
+                    point = new naver.maps.Point(item.x, item.y);  // point 저장
+
+                // 각 if문 안에서 가까운 버스정류장 찾는 로직 짜기. if 문에서 발생하는 에러 해결했음!
+                if (i == 0) {
+                    start_lat += item.x;
+                    start_lon += item.y;
+                } else {
+                    arrive_lat += item.x;
+                    arrive_lon += item.y;
+                    SendCoordinate(start_lat, start_lon, arrive_lat, arrive_lon);
+                }
+
+                if (item.roadAddress) {
+                    htmlAddresses.push('[도로명 주소]' + item.roadAddress);
+                }
+                if (item.jibunAddress) {
+                    htmlAddresses.push('[지번 주소]' + item.jibunAddress);
+                }
+                if (item.englishAddress) {
+                    htmlAddresses.push('[영문명 주소]' + item.englishAddress);
+                }
+                // insertAddress(item.roadAddress, item.x, item.y);  // 도로명 주소, item.x: 위도, item.y: 경도
+                console.log("전체 다 들어갔나?", start_lat, start_lon, arrive_lat, arrive_lon)
+            });
+        } // 반복문 끝
+        let i = 0;
+    }
+
+
+    // 반환된 좌표를 바로 OSRM API에 보내서 길찾기 waypoint 얻어오기
+    function SendCoordinate(start_lat, start_lon, arrive_lat, arrive_lon) {
+        var Parms = '';
+        Parms += start_lat;
+        Parms += ',' + start_lon;
+        Parms += ';' + arrive_lat;
+        Parms += ',' + arrive_lon;
+        Parms += '?steps=true'
+
+        // url에 이어서 전송...
+        // 지금은 도커를 이용해 local에서 백엔드 실행하고 나서야 api 호출을 할 수 있지만. 배포할 땐 aws로 상시호출가능?
+        // 비동기 처리
+        $.ajax({
+            url: 'http://127.0.0.1:5000/route/v1/foot/' + Parms,
+            method: 'GET',
+            dataType: 'json', //서버에서 보내줄 데이터 타입
+            success: function (data) {
+                console.log('성공' + data);
+            }
+            ,
+            error: function (request, status, error) {
+                console.log(request, status, error)
+            }
+            ,
+            complete: function () {
+                console.log("종료")
+            }
+        }).done(function (json) {   // json 데이터 parsing 해서 html에 붙이기
+            let osrm_json = JSON.parse(JSON.stringify(json));  // 원본 응답 data
+            let osrm_steps = osrm_json.routes[0].legs[0].steps
+
+            // routes parsing
+            document.getElementById('totalDistance').innerHTML = '총 거리: ' + osrm_json.routes[0].distance + 'm';
+            document.getElementById('totalDuration').innerHTML = '총 소요시간: ' + osrm_json.routes[0].duration + '초';
+
+            let location = "";
+            let index;
+
+            location += "<tr>"
+            location += "    <td>" + '출발' + "</td>"
+            location += "    <td>" + osrm_json.waypoints[0].location + "</td>" // waypoints[0]: 시작점
+            starter = osrm_json.waypoints[0].location
+            finisher = osrm_json.waypoints[1].location
+            //starter and finisher 이용해서 주변 버스 정류장 찾기
+
+            // steps 반복문
+            for (index = 1; index <= osrm_steps.length; index++) {
+                location += "    <td>" + index + "</td>"
+                location += "    <td>" + osrm_steps[index - 1].maneuver.location + "</td>"
+                insertAddress_first(osrm_steps[index - 1].maneuver.location[0], osrm_steps[index - 1].maneuver.location[1])
+            }  // 반복문 끝
+
+            location += "    <td>" + '도착' + "</td>"
+            location += "    <td>" + osrm_json.waypoints[1].location + "</td>"  // waypoints[0]: 도착점
+            location += "</tr>"
+            location += "<br>"
+
+            $('.waypoints').append(location);
+            location = ""  // append하고 location reset
+        });
+    }
+
+    function insertAddress_last(latitude, longitude) {
+        last_point = new naver.maps.LatLng(longitude, latitude);
+
+        var path = polyline.getPath();
+        path.push(last_point); //시작점
+
+
+        new naver.maps.Marker({
+            map: map,
+            position: last_point
+
+        });
+    }
+
+    function insertAddress_first(latitude, longitude) {
+
+        first_point = new naver.maps.LatLng(longitude, latitude);
+
+        var path = polyline.getPath();
+        path.push(first_point); //시작점
+
+
+        new naver.maps.Marker({
+            map: map,
+            position: first_point
+
+        });
+    }
+
+
+</script>
+</body>
 </html>
