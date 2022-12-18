@@ -16,15 +16,15 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from .views import Sub, Sub1, Sub2, searchResult
-from content.views import reply
+from content.views import GetReply
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('', Sub.as_view()),
     path('samchung/', Sub1.as_view(), name='api'),
     path('example/', Sub2.as_view()),
-    path('search/',searchResult.as_view(), name='searchResult'),
-    path('reply/',reply,name='reply')
+    path('search/', searchResult.as_view(), name='searchResult'),
+    path('reply/', GetReply.as_view(), name='reply')
 
 ]
 

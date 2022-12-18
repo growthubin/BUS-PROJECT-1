@@ -104,11 +104,15 @@
             </label>
         </div>
         <div style="width: 350px; padding :10px 0 15px 0 ; border: solid 1px black;">
-            <table border="1" class="replyTable">
-                <tr>
-                    <td>내용</td>
-                </tr>
+            <table class="replyTable">
+                <div> 내용</div>
                 <tbody class="replyTbody" typeof="string">
+                <!-- 기존 댓글 -->
+                {% for r in reply_list %}
+                    <br>
+                    <tr>{{ r.reply_content }}</tr>
+                {% endfor %}
+                <!-- 새 댓글 -->
                 {% for item in reply %}
                     <tr>
                         <td>{{ item.content }}</td>
@@ -168,13 +172,18 @@
 -->
 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script>
+
+    // 댓글 Post
+    {% for feed in feeds1 %}
+        const feed_id = {{ feed.id }};
+    {% endfor %}
+
     let btnReply = document.querySelector('.btnReply');
     btnReply.addEventListener("click", function () {
-        let content = document.getElementsByTagName('textarea')[0].value;
-        alert(content);
+        let content = document.getElementsByTagName('textarea')[0].value;  // 댓글 내용
         {#let content = document.querySelectorAll('.replyContent').values();#}
         let param = {
-            'feedId': '{{ feed.id }}',
+            'feedId': feed_id,
             'content': content,
         }
         $.ajax({
@@ -184,6 +193,7 @@
                 'X-CSRFTOKEN': '{{ csrf_token }}'
             },
             dataType: "json",
+            contentType: "application/json",
             data: JSON.stringify(param),
 
             success: function (data) {
@@ -224,8 +234,8 @@
 
     arrive_place = new {{ feed.address }}
 
-    // 주소 입력 후 submit 연쇄 작용 시작..
-    $('#submit').on('click', function (e) {
+        // 주소 입력 후 submit 연쇄 작용 시작..
+        $('#submit').on('click', function (e) {
         e.preventDefault();
         var address = [$('#address_start').val(), $('#address_arrive').val()];  // 최신 입력이 먼저 들어가서
         searchAddressToCoordinate(address);

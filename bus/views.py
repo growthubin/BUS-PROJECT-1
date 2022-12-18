@@ -1,7 +1,6 @@
-
 from django.shortcuts import render
 from rest_framework.views import APIView
-from content.models import Feed
+from content.models import Feed, Reply
 from django.db.models import Q
 from rest_framework.response import Response
 
@@ -17,7 +16,8 @@ class Sub(APIView):
 
     def post(self, request):
         print("포스트로 호출")
-        return render(request,"Bus project//Main.html")
+        return render(request, "Bus project//Main.html")
+
 
 class Sub1(APIView):
     # noinspection PyMethodMayBeStatic
@@ -27,7 +27,8 @@ class Sub1(APIView):
 
     def post(self, request):
         print("포스트로 호출")
-        return render(request,"Bus project//API MAP.html")
+        return render(request, "Bus project//API MAP.html")
+
 
 class Sub2(APIView):
     # noinspection PyMethodMayBeStatic
@@ -37,21 +38,32 @@ class Sub2(APIView):
 
     def post(self, request):
         print("포스트로 호출")
-        return render(request,"Bus project//example.html")
-
-
+        return render(request, "Bus project//example.html")
 
 
 class searchResult(APIView):
 
-    def get(self,request):
+    def get(self, request):
 
-        query=None
-        feeds1=None
+        query = None
+        feeds1 = None
+        reply_list =[]
 
         if 'kw' in request.GET:
             query = request.GET.get('kw')
             feeds1 = Feed.objects.all().filter(
                 Q(name__icontains=query)
             )
-        return render(request,"Bus project//API MAP.html",{'query':query,'feeds1':feeds1})
+
+            for feed in feeds1:
+                reply_object_list = Reply.objects.filter(feed_id=feed.id)  # 해당 feed id에 해당하는 댓글 리스트 찾기
+                reply_list = []
+
+                for reply in reply_object_list:
+                    reply_list.append(dict(reply_content=reply.content))
+
+                print(reply_list)
+                # nickname=user.nickname)) 추후 익명 추가
+
+            content = {'query': query, 'feeds1': feeds1, 'reply_list': reply_list}
+            return render(request, "Bus project//API MAP.html", context=content)
