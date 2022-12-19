@@ -22,17 +22,3 @@ class GetReply(APIView):
         }
         return JsonResponse(context)  # html에 뿌리기 위한 return
 
-def GetDetail( request, feedid):
-    feed = get_object_or_404(Feed, pk=feedid)
-
-    reply = Reply.objects.filter(feed_id=feedid, null=True)
-    try:
-        session = request.session['feedid']
-        context = {
-            'feed': feed,
-            'reply': reply,
-            'session': session,
-        }
-        return render(request, 'API MAP.html', context)
-    except KeyError:
-        return redirect('Main.html')

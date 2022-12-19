@@ -71,17 +71,6 @@
     <div style="display: flex; flex-direction: row; text-align: center;">
 
         <div class="flex-container" style="width: 300px; height: 600px;">
-            <!-- 주소 검색 -->
-            {#            <div style="margin-top: 30px">#}
-            {#                <div>#}
-            {#                    <input id="address_start" type="text" placeholder="출발지 주소">#}
-            {#                </div>#}
-            {#                <div>#}
-            {#                    <input id="address_arrive" type="text" placeholder="도착지 주소">#}
-            {#                </div>#}
-            {#                <input id="submit" type="button" value="주소 검색">#}
-            {#            </div>#}
-
             <!-- 출발지 입력 -->
             <form class="d-flex">
                 <input class="form-control me-2 address" id="address_start" type="text" placeholder="출발지"
@@ -123,8 +112,6 @@
         </div>
     </div>
 {% endfor %}
-
-
 
 
 
@@ -221,23 +208,40 @@
         maxBounds: max_loc,
     });
 
+    // 저상버스 경로
     var polyline = new naver.maps.Polyline({
         map: map,
         path: [],
-        strokeColor: '#5347AA',
-        strokeWeight: 2
+        strokeColor: '#BF350C',
+        strokeWeight: 5
     });
 
-    var starter = []
 
-    var finisher = []
+    // 출발지 도보 경로
+    var polyline_1 = new naver.maps.Polyline({
+        map: map,
+        path: [],
+        strokeColor: '#000000',
+        strokeWeight: 5
+    });
 
-    arrive_place = new {{ feed.address }}
+    // 도착지 도보 경로
+    var polyline_2 = new naver.maps.Polyline({
+        map: map,
+        path: [],
+        strokeColor: '#827717',
+        strokeWeight: 5
+    });
 
-        // 주소 입력 후 submit 연쇄 작용 시작..
-        $('#submit').on('click', function (e) {
+    let start_lat = '';
+    let start_lon = '';
+    let arrive_lat = '';
+    let arrive_lon = '';
+
+    // 주소 입력 후 submit 연쇄 작용 시작..
+    $('#submit').on('click', function (e) {
         e.preventDefault();
-        var address = [$('#address_start').val(), $('#address_arrive').val()];  // 최신 입력이 먼저 들어가서
+        const address = [$('#address_start').val(), $('#address_arrive').val()];  // 최신 입력이 먼저 들어가서
         searchAddressToCoordinate(address);
     });
 
@@ -246,7 +250,7 @@
         new daum.Postcode({
             oncomplete: function (data) { //선택시 입력값 세팅
                 document.getElementById("address_start").value = data.address; // 주소 넣기
-                {#document.querySelector("input[name=address_detail]").focus(); //상세입력 포커싱#}
+                // document.querySelector("input[name=address_detail]").focus(); //상세입력 포커싱
             }
         }).open({autoClose: true});
     });
@@ -256,7 +260,7 @@
             new daum.Postcode({
                 oncomplete: function (data) { //선택시 입력값 세팅
                     document.getElementById("address_arrive").value = data.address; // 주소 넣기
-                    {#document.querySelector("input[name=address_detail]").focus(); //상세입력 포커싱#}
+                    // document.querySelector("input[name=address_detail]").focus(); //상세입력 포커싱
                 }
             }).open({autoClose: true});
         });
@@ -264,11 +268,6 @@
 
     // 주소 검색하는 부분(실질적인 로직) -> insertAddress 함수로 넘겨줌.
     function searchAddressToCoordinate(address) {
-        var start_lat = '';
-        var start_lon = '';
-        var arrive_lat = '';
-        var arrive_lon = '';
-
         for (let i = 0; i < 2; i++) {
             naver.maps.Service.geocode({
                 query: address[i]
@@ -283,14 +282,20 @@
                     item = response.v2.addresses[0],
                     point = new naver.maps.Point(item.x, item.y);  // point 저장
 
-                // 각 if문 안에서 가까운 버스정류장 찾는 로직 짜기. if 문에서 발생하는 에러 해결했음!
-                if (i == 0) {
-                    start_lat += item.x;
-                    start_lon += item.y;
+                if (address[i] === address[0]) {
+                    start_lon += item.x;  // item.x: 경도
+                    start_lat += item.y;  // item.y: 위도
+
                 } else {
-                    arrive_lat += item.x;
-                    arrive_lon += item.y;
-                    SendCoordinate(start_lat, start_lon, arrive_lat, arrive_lon);
+                    arrive_lon += item.x;
+                    arrive_lat += item.y;
+                }
+
+                if (start_lat < 37.54 || start_lat > 37.63) {
+                    alert("위도를 다시 입력하세요");
+                }
+                if (arrive_lat < 37.54 || arrive_lat > 37.63) {
+                    alert("위도를 다시 입력하세요");
                 }
 
                 if (item.roadAddress) {
@@ -302,32 +307,205 @@
                 if (item.englishAddress) {
                     htmlAddresses.push('[영문명 주소]' + item.englishAddress);
                 }
-                // insertAddress(item.roadAddress, item.x, item.y);  // 도로명 주소, item.x: 위도, item.y: 경도
-                console.log("전체 다 들어갔나?", start_lat, start_lon, arrive_lat, arrive_lon)
+                console.log("출발지 위경도, 목적지 위경도", start_lon, start_lat, arrive_lon, arrive_lat)
+                searchRoot(start_lon, start_lat, arrive_lon, arrive_lat);
             });
         } // 반복문 끝
         let i = 0;
     }
 
+    async function searchRoot(a, b, c, d) {
+        //오디세이 API 호출
+        let url =
+            "https://api.odsay.com/v1/api/searchPubTransPathT?SX=" +
+            a +
+            "&SY=" +
+            b +
+            "&EX=" +
+            c +
+            "&EY=" +
+            d +
+            "&apiKey=tAVo2/qjrq9QIwIPVRbHJNhA5/dTdymsPEN3jwOgkiU";
 
-    // 반환된 좌표를 바로 OSRM API에 보내서 길찾기 waypoint 얻어오기
-    function SendCoordinate(start_lat, start_lon, arrive_lat, arrive_lon) {
-        var Parms = '';
-        Parms += start_lat;
-        Parms += ',' + start_lon;
-        Parms += ';' + arrive_lat;
-        Parms += ',' + arrive_lon;
+        try {
+            //길찾기 결과 가져오기
+            let res = await fetch(url);
+            let response = await res.json();
+            console.log("길찾기 결과", response);
+
+            let path = response.result.path;
+
+            for (let i = 0; i <= path.length; i++) {
+                let pathtype = response.result.path[i].pathType; //경로 타입
+                let busid = response.result.path[i].subPath[1].lane[0].busID; //버스 아이디
+                let mapobj = response.result.path[i].info.mapObj; //경로 코드
+                let time = response.result.path[i].info.totalTime; //시간
+                let dis = response.result.path[i].info.totalDistance; //거리
+                let pay = response.result.path[i].info.payment; //요금
+
+                //경로 그리기
+                if (pathtype === 2) {
+                    let busno = response.result.path[i].subPath[1].lane[0].busNo;
+                    let lowbus = await checkLowBus(busid);
+                    if (lowbus === "Y") {
+                        let start_bus = response.result.path[i].subPath[1].startX; // 시작 정류장 경도
+                        let end_bus = response.result.path[i].subPath[1].endX;
+
+                        drawMap(mapobj);
+                        console.log(
+                            "저상버스 경로 \n 버스 번호:" + busno +
+                            " 시간:" + time + "분" +
+                            " 거리:" + dis + "미터" +
+                            " 요금:" + pay + "원");
+                        break;
+                    }
+                } else {
+                    drawMap(mapobj);
+                    console.log(
+                        "지하철 경로 \n 시간:" + time + "분" +
+                        " 거리:" + dis + "미터" +
+                        " 요금:" + pay + "원");
+                    break;
+                }
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    // 저상버스가 있는지 확인하는 함수
+    async function checkLowBus(busID) {
+        //오디세이 API 호출
+        let url =
+            "https://api.odsay.com/v1/api/realtimeRoute?busID=" +
+            busID +
+            "&busBase=0&lowBus=1&apiKey=tAVo2/qjrq9QIwIPVRbHJNhA5/dTdymsPEN3jwOgkiU";
+
+        try {
+            //실시간 위치 정보 결과 가져오기
+            let obj = await fetch(url);
+            let object = await obj.json();
+            console.log("저상버스 결과", object);
+
+            let chk = object.result.real[0].lowBusYn; //저상버스 여부 (Y/N)
+
+            return chk;
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    // 경로 그리는 함수
+    async function drawMap(mabObj) {
+        //오디세이 API 호출
+        let url =
+            "https://api.odsay.com/v1/api/loadLane?mapObject=0:0@" +
+            mabObj +
+            "&apiKey=tAVo2/qjrq9QIwIPVRbHJNhA5/dTdymsPEN3jwOgkiU";
+
+        try {
+            //경로 중간 좌표 가져오기
+            let m = await fetch(url);
+            let ma = await m.json();
+            console.log("중간좌표", ma);
+
+            drawNaverPolyLine(ma); // 노선그래픽데이터 지도위 표시
+
+            // boundary 데이터가 있을경우, 해당 boundary로 지도이동
+            if (ma.result.boundary) {
+                var boundary = new naver.maps.LatLngBounds(
+                    new naver.maps.LatLng(
+                        ma.result.boundary.top,
+                        ma.result.boundary.left
+                    ),
+                    new naver.maps.LatLng(
+                        ma.result.boundary.bottom,
+                        ma.result.boundary.right
+                    )
+                );
+                map.panToBounds(boundary);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    // 지도위 마커 표시해주는 함수
+    function drawNaverMarker(x, y) {
+        var marker = new naver.maps.Marker({
+            position: new naver.maps.LatLng(y, x),
+            map: map,
+        });
+    }
+
+    // 노선그래픽 데이터를 이용하여 지도위 폴리라인 그려주는 함수  osrm 연결?
+    function drawNaverPolyLine(data) {
+        var path = polyline.getPath();  // 오디세이 path
+        var path_1 = []
+        for (var i = 0; i < data.result.lane.length; i++) {
+            for (var j = 0; j < data.result.lane[i].section.length; j++) {
+                for (
+                    var k = 0;
+                    k < data.result.lane[i].section[j].graphPos.length;
+                    k++
+                ) {
+                    path.push(
+                        new naver.maps.LatLng(
+                            data.result.lane[i].section[j].graphPos[k].y,
+                            data.result.lane[i].section[j].graphPos[k].x
+                        )
+                    );
+
+                    path_1.push(
+                        new naver.maps.LatLng(
+                            data.result.lane[i].section[j].graphPos[k].y,
+                            data.result.lane[i].section[j].graphPos[k].x
+                        )
+                    );
+                }
+            }
+        }
+
+        // 출발지 마커, 출발지 ~ 출발 정류장 OSRM 전달
+        // console.log('sendcoordinate start 파라미터', start_lon, start_lat, path_1[0].x, path_1[0].y);
+        drawNaverMarker(start_lon, start_lat);
+        SendCoordinate(start_lon, start_lat, path_1[0].x, path_1[0].y);
+
+        // 도착지 마커, 도착 ~ 도착 정류장 OSRM 전달
+        // console.log('sendcoordinate arrive 파라미터', arrive_lon, arrive_lat, path_1[path_1.length - 1].x, path_1[path_1.length - 1].y)
+        drawNaverMarker(arrive_lon, arrive_lat);
+        SendCoordinate(arrive_lon, arrive_lat, path_1[path_1.length - 1].x, path_1[path_1.length - 1].y);
+    }
+
+    // 좌표들을 OSRM API에 보내서 waypoint, steps 좌표 얻기
+    function SendCoordinate(start_lon_1, start_lat_1, arrive_lon_1, arrive_lat_1) {
+        let path;
+
+        // start_lon_1 값이, 사용자가 입력한 전역 변수 도착지 lon이면
+        if (start_lon_1 === arrive_lon) {
+            path = polyline_2.getPath()  // 도착지 ~ 정류장 path
+        } else {
+            path = polyline_1.getPath()  // 출발지 ~ 정류장 path
+        }
+
+        var starter = [];
+        var finisher = [];
+        let Parms = '';
+
+        Parms += start_lon_1;
+        Parms += ',' + start_lat_1;
+        Parms += ';' + arrive_lon_1;
+        Parms += ',' + arrive_lat_1;
         Parms += '?steps=true'
 
-        // url에 이어서 전송...
+        // url에 이어서 전송
         // 지금은 도커를 이용해 local에서 백엔드 실행하고 나서야 api 호출을 할 수 있지만. 배포할 땐 aws로 상시호출가능?
-        // 비동기 처리
         $.ajax({
             url: 'http://127.0.0.1:5000/route/v1/foot/' + Parms,
             method: 'GET',
             dataType: 'json', //서버에서 보내줄 데이터 타입
             success: function (data) {
-                console.log('성공' + data);
+                console.log('성공');
             }
             ,
             error: function (request, status, error) {
@@ -337,67 +515,28 @@
             complete: function () {
                 console.log("종료")
             }
-        }).done(function (json) {   // json 데이터 parsing 해서 html에 붙이기
-            let osrm_json = JSON.parse(JSON.stringify(json));  // 원본 응답 data
-            let osrm_steps = osrm_json.routes[0].legs[0].steps
+        }).done(function (json) {   // steps와 waypoints parsing, marker찍는 함수로 연결까지
+            var osrm_json = JSON.parse(JSON.stringify(json));
+            var osrm_steps = osrm_json.routes[0].legs[0].steps;
+            var osrm_waypoints = osrm_json.waypoints;
+            let index;
 
-            // routes parsing
+            // 총 거리 및 소요시간 parsing
             document.getElementById('totalDistance').innerHTML = '총 거리: ' + osrm_json.routes[0].distance + 'm';
             document.getElementById('totalDuration').innerHTML = '총 소요시간: ' + osrm_json.routes[0].duration + '초';
 
-            let location = "";
-            let index;
+            starter = osrm_waypoints[0].location
+            finisher = osrm_waypoints[1].location
 
-            location += "<tr>"
-            location += "    <td>" + '출발' + "</td>"
-            location += "    <td>" + osrm_json.waypoints[0].location + "</td>" // waypoints[0]: 시작점
-            starter = osrm_json.waypoints[0].location
-            finisher = osrm_json.waypoints[1].location
-            //starter and finisher 이용해서 주변 버스 정류장 찾기
+            console.log('osrm starter는 ', starter);
+            path.push(new naver.maps.LatLng(starter[1], starter[0]));
 
-            // steps 반복문
             for (index = 1; index <= osrm_steps.length; index++) {
-                location += "    <td>" + index + "</td>"
-                location += "    <td>" + osrm_steps[index - 1].maneuver.location + "</td>"
-                insertAddress_first(osrm_steps[index - 1].maneuver.location[0], osrm_steps[index - 1].maneuver.location[1])
-            }  // 반복문 끝
+                path.push(new naver.maps.LatLng(osrm_steps[index - 1].maneuver.location[1], osrm_steps[index - 1].maneuver.location[0]))
+            }
 
-            location += "    <td>" + '도착' + "</td>"
-            location += "    <td>" + osrm_json.waypoints[1].location + "</td>"  // waypoints[0]: 도착점
-            location += "</tr>"
-            location += "<br>"
-
-            $('.waypoints').append(location);
-            location = ""  // append하고 location reset
-        });
-    }
-
-    function insertAddress_last(latitude, longitude) {
-        last_point = new naver.maps.LatLng(longitude, latitude);
-
-        var path = polyline.getPath();
-        path.push(last_point); //시작점
-
-
-        new naver.maps.Marker({
-            map: map,
-            position: last_point
-
-        });
-    }
-
-    function insertAddress_first(latitude, longitude) {
-
-        first_point = new naver.maps.LatLng(longitude, latitude);
-
-        var path = polyline.getPath();
-        path.push(first_point); //시작점
-
-
-        new naver.maps.Marker({
-            map: map,
-            position: first_point
-
+            console.log('osrm finisher는 ', finisher);
+            path.push(new naver.maps.LatLng(finisher[1], finisher[0]));
         });
     }
 
