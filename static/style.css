@@ -20,82 +20,17 @@ html, body {
 	overflow-x: hidden;
 }
 
-.table-common>table {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.table-common .btn-box {
-	text-align:center;
-}
-
-.table-common>table th, .table-common>table td {
-	border: 1px solid black;
+.td {
 	padding: 10px;
+	border: 1px solid #666666;
+	white-space: nowrap;
 }
 
-.article-list table {
-    border:none;
-    border-top:2px solid lightgray;
-    border-bottom:2px solid lightgray;
-}
 
-.article-list > table th, .article-list > table td {
-    border:none;
-}
-
-.article-list > table td {
-    border-bottom:1px solid lightgray;
-}
-
-.article-list > table thead {
-    border-bottom:2px solid lightgray;
-    background-color:#F5F5F5;
-}
-
-.article-detail {
-    border:2px solid lightgray;
-}
-
-.article-detail > table {
-    border:none;
-
-}
-
-.article-detail > table th, .article-detail > table td {
-    border:none;
-}
-
-.article-detail > table tr:not(:last-child) {
-    border-bottom:1px solid lightgray;
-}
-
-.article-detail > table tr:not(.article-body), .article-detail > table tr:not(.article-body) > td{
-    height:20px;
-    font-size:0.8rem;
-}
-
-.article-detail > table tr.article-title > td {
-    height:40px;
-    font-weight:bold;
-    font-size:1.2rem;
-}
-
-.article-detail > table td:last-child {
-    padding-right:100px;
-}
-
-.article-detail > .article-writer {
-
-    height:102px;
-    background-color:lightgray;
-    border-bottom:1px solid lightgray;
-    text-align:center;
-}
 .green_box {
     position:absolute;
-    left : 900px;
-    top : 11px;
+    left : 10px;
+    top : 8px;
     width: 30px;
     height: 30px;
     background-color: rgba(169,209,142);
@@ -103,8 +38,8 @@ html, body {
 }
 .yellow_box {
     position: absolute;
-    left: 900px;
-    top: 11px;
+    left: 10px;
+    top: 8px;
     width: 30px;
     height: 30px;
     background-color: rgba(255,217,102);
@@ -112,19 +47,68 @@ html, body {
 }
 .red_box {
     position: absolute;
-    left: 900px;
-    top: 11px;
+    left: 10px;
+    top: 8px;
     width: 30px;
     height: 30px;
-    background-color: darkred;
+    background-color: rgba(250,125,86);
     border-radius: 50%;
 }
 .flex-container {
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly;
-  padding-top: 180px;
-  padding-bottom: 180px;
+  padding-top: 30px;
+  padding-bottom: 50px;
+}
+
+
+
+.replyContent {
+    width: 250px;
+    height: 60px;
+    padding: 10px;
+    box-sizing: border-box;
+    border: solid 2px lightgray;
+    border-radius: 5px;
+    font-size: 16px;
+    resize: none;
+}
+
+/*rgba(127,211,199)*/
+
+.btnReply {
+    box-shadow: inset 0 1px 0 0 #565656;
+    background: #808080 linear-gradient(to bottom, #808080 5%, #808080 100%);
+    border-radius: 30px;
+    border: 1px solid #808080;
+    display: inline-block;
+    cursor: pointer;
+    color: #ffffff;
+   font-family: 'Nanum Gothic Coding';
+    font-size: 16px;
+    padding: 5px 24px;
+    text-decoration: none;
+    text-shadow: 1px 1px 1px gray;
+    margin: 15px 5px
+
+}
+
+.replyTable {
+    width: 300px;
+    padding: 10px;
+    box-sizing: border-box;
+    text-align: left;
+    font-family: 'Nanum Gothic Coding' ;
+}
+
+.replyTbody {
+    padding: 10px;
+    text-align: left;
+
+}
+
+.replyTable>.replyTbody> tr {
+    font-family: 'Nanum Gothic Coding'
 }
 
 

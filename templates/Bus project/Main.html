@@ -12,12 +12,12 @@
 
 
 <body>
-짜증
+
   <div class="container-fluid" style="justify-content: space-between">
       <a><img src="https://i.ibb.co/VgymkTx/logo.png" alt="logo" border="0" style="width: 250px;"></a>
   </div>
   <div style="text-align: center;">
-      <p style="font-size: 50px;">어디로 떠날까요?</p>
+      <p class= body style="font-size: 40px ; text-shadow: 1px 1px 1px gray; ">어디로 떠날까요?</p>
 {#      검색창#}
       <div class="search-bar" style="border: 30px;">
 
@@ -37,21 +37,23 @@
   </div>
 
   <div  style=" padding-right: 83px; display: flex; justify-content: space-between; padding-left: 83px;">
-      <div ><h1><p class="regular" style="font-size : 30px;">추천하는 장소</p></h1></div>
-      <div><button class="w-btn w-btn-green2" type="button">필터</button></div>
+
+      <div ><h1 >
+          <p  class= body style="font-size : 30px; text-shadow: 1px 1px 1px gray;">추천하는 장소</p></h1></div>
+      <a href="/example"><span class="material-symbols-outlined" style="font-size: 35px ; text-shadow: 1px 1px 1px gray; "> pin_drop </span></a>
   </div>
 {#  #}
 
   <div class="container-fluid" style="display: inline-flex; justify-content: space-evenly; flex-wrap: wrap;">
       {% for feed in feeds %}
           <div style="position: relative; width: 550px; height: 550px; padding: 1px 1px 2px 3px;  ">
-              <div class="star"><span class="material-symbols-outlined" style="font-size: 50px;">star</span></div>
+
               <div class="place">
 
                   <form method="get" action="{% url 'searchResult' %}">
                       {% csrf_token %}
-
-                      <img src="{{ feed.image }}" width="530px" height="515px" class="rec_pic">
+{#                        style="box-shadow: 0 17px 20px -18px rgba(0, 0, 0, 1)"#}
+                      <img src="{{ feed.image }}" width="530px" height="515px" class="rec_pic"  >
 
                   </form>
 
@@ -68,13 +70,13 @@
               {% endif %}
 
           {# a태그로 해결#}
-              <div class="text_box">
+              <div class="text_box" >
                   <form method="get" action="{% url 'searchResult' %}">
                       {% csrf_token %}
                       <k>{{ feed.name }}</k>
                       {# <button type="button" class="btn btn-light" style="background-color: white" name="kw"> {{ feed.name }}</button> #}
                         {# 나는 포트 번호가 8001이라서 이렇게 했는데 다른사람들 자기 포트번호대로 바꿔주면 됨니다#}
-                      <a href="http://127.0.0.1:8001/search/?csrfmiddlewaretoken=7lmcmMjgegwasER2cbpmC5a9R3K66Ir88585PAsa7CjLaX6rMywp0SzLb6OmWWAp&kw={{ feed.name }}" style="text-decoration: none ; color: rgba(127,211,199) ; font-family: 'Comic Sans MS' " >   Let's go</a>
+                      <a class='link' href="http://127.0.0.1:8001/search/?csrfmiddlewaretoken=7lmcmMjgegwasER2cbpmC5a9R3K66Ir88585PAsa7CjLaX6rMywp0SzLb6OmWWAp&kw={{ feed.name }}" style="text-decoration: none ; color: rgba(127,211,199) ; font-family: 'Comic Sans MS' "  onmouseenter="mouseEnterPhoto();" onmouseleave="mouseLeavePhoto();" >   Let's go</a>
 
                   </form>
               </div>
@@ -82,6 +84,9 @@
 
 
           </div>
+
+
+
       {% endfor %}
 
 
@@ -108,21 +113,36 @@
           });
 
 
+          function mouseEnterPhoto() {
+              $('.link').css('text-shadow', '1.2px 1.2px 1.2px');
+          }
+
+          function mouseLeavePhoto() {
+              $('.link ').css('text-shadow', 'none');
+          }
+
+
+
+
       </script>
 
   </div>
 
 
 
-    <!-- Optional JavaScript; choose one of the two! -->
+    <!— Optional JavaScript; choose one of the two! —>
 
-    <!-- Option 1: Bootstrap Bundle with Popper -->
+    <!— Option 1: Bootstrap Bundle with Popper —>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 
-    <!-- Option 2: Separate Popper and Bootstrap JS -->
-    <!--
+    <!— Option 2: Separate Popper and Bootstrap JS —>
+    <!—
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
-    -->
+    —>
+
+
+    <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+
 </body>
 </html>

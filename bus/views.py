@@ -33,12 +33,15 @@ class Sub1(APIView):
 class Sub2(APIView):
     # noinspection PyMethodMayBeStatic
     def get(self, request):
+        all_feed = Feed.objects.all()  # 모든 관광장소 불러오기
+
+        content = {'all_feed': all_feed, }
         print("겟으로 호출")
-        return render(request, "Bus project//example.html")
+        return render(request, "Bus project//Locating_only.html", context=content)
 
     def post(self, request):
         print("포스트로 호출")
-        return render(request, "Bus project//example.html")
+        return render(request, "Bus project//Locating_only.html")
 
 
 class searchResult(APIView):
@@ -47,7 +50,7 @@ class searchResult(APIView):
 
         query = None
         feeds1 = None
-        reply_list =[]
+        reply_list = []
 
         if 'kw' in request.GET:
             query = request.GET.get('kw')
