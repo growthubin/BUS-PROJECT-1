@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <script type="text/javascript"
+            src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=mrc6y6yoti&submodules=geocoder"></script>
+    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/src/MarkerClustering.js"></script>
+    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- style -->
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+
+    <title>길찾기 전용 페이지</title>
+</head>
+
+<body>
+<div style="display: flex; flex-direction: row">
+
+    <!-- 검색창 및 결과 표시 -->
+    <div class="search" style="margin: 40px">
+        <div>
+            <div style="font-family: 'Nanum Gothic Coding';font-size:20px; padding-bottom: 10px"><span
+                    class="material-symbols-outlined" style="font-size: 27px ; ; color: #565656 ">pin_drop</span>
+                출발지
+            </div>
+            <input class="address" id="address_start" type="text" placeholder="출발지 주소"
+                   style="border-radius: 10px ; height: 40px; border: solid 2px lightgray ">
+        </div>
+        <div style="margin: 15px 0">
+            <div style="font-family: 'Nanum Gothic Coding'; font-size: 20px; padding-bottom: 10px"><span
+                    class="material-symbols-outlined" style="font-size: 27px ; ; color: #565656 ">pin_drop</span>
+                도착지
+            </div>
+            <input class="address" id="address_arrive" type="text" placeholder="도착지 주소"
+                   style="border-radius: 10px ; height: 40px; border: solid 2px lightgray ">
+        </div>
+        <div style="margin: 20px 5px 20px 36px;">
+            <input style="background-color: white; border-radius:20px; display: block; font-size: 14px ; width:95px;height: 40px"
+                   id="submit" type="button" value="Let's go~!">
+        </div>
+
+        <!-- 경로 안내 -->
+        <style>
+            .locating_bold {
+                font-size: 20px;
+                font-family: "Nanum Gothic Coding";
+                padding: 7px;
+                text-shadow: 1px 1px 1px gray;
+            }
+
+            .locating-detail {
+                font-size: 17px;
+                font-family: "Nanum Gothic Coding";
+                color: #565656;
+                padding: 8px;
+                line-height: 30px;
+            }
+        </style>
+        <div style="margin-top: 70px">
+            <div style="text-align: center; font-size: 20px; font-weight: bold">경로 찾기</div>
+            <hr>
+            <div style="font-size: 11px; color: gray; margin-left: 80px">(전동휠체어 기준)</div>
+            <div class="locating_bold"><span class="material-symbols-outlined" style="font-size: 30px">accessible_forward</span> 도보 </div>
+            <div class="locating-detail" id="start_walking"></div>
+
+
+            <div class="locating_bold"><img src="https://cdn-icons-png.flaticon.com/512/3514/3514299.png" style="width: 28px; height: 28px"> 버스</div>
+            <div class="locating-detail" id="first_bus"></div>
+            <div class="locating-detail" id="second_bus"></div>
+
+            <div class="locating_bold"><span class="material-symbols-outlined" style="font-size: 30px">subway</span> 지하철</div>
+            <div class="locating-detail" id="first_subway"></div>
+            <div class="locating-detail" id="second_subway"></div>
+
+            <div class="locating_bold"><span class="material-symbols-outlined" style="font-size: 30px">accessible_forward</span> 도보 </div>
+            <div class="locating-detail" id="arrive_walking"></div>
+        </div>
+    </div>
+
+    <!-- 지도 -->
+    <div id="map" style="width:100%;height:1000px;"></div>
+</div>
+
+<script>
+    var Infos = [];
+    // Naver API - OSRM API
+    var max_loc = new naver.maps.LatLngBounds(
+        new naver.maps.LatLng(37.54, 126.90), //중구 서대문구 종로구
+        new naver.maps.LatLng(37.63, 127.02));
+
+    var map = new naver.maps.Map("map", {
+        minZoom: 13, // 구 레벨
+        maxBounds: max_loc,
+        zoomControlOptions: {
+            style: naver.maps.ZoomControlStyle.SMALL
+        }
+    });
+
+    // 저상버스 경로
+    var polyline = new naver.maps.Polyline({
+        map: map,
+        path: [],
+        strokeColor: '#BF350C',
+        strokeWeight: 10
+    });
+
+    // 출발지 도보 경로
+    var polyline_1 = new naver.maps.Polyline({
+        map: map,
+        path: [],
+        strokeColor: '#696969',
+        strokeWeight: 10
+    });
+
+    // 도착지 도보 경로
+    var polyline_2 = new naver.maps.Polyline({
+        map: map,
+        path: [],
+        strokeColor: '#696969',
+        strokeWeight: 10
+    });
+
+    let start_lat = '';
+    let start_lon = '';
+    let arrive_lat = '';
+    let arrive_lon = '';
+
+
+    // 모든 관광장소 마커 표시
+    var locations;
+    var infowindows = [];
+    var markers = [];
+
+    var feed_name;
+
+    DisplayLocations();
+
+    function DisplayLocations() {
+        {% for feed in all_feed %}
+            locations = new naver.maps.LatLng("{{ feed.latitude }}", "{{ feed.longitude }}");
+            markers.push(new naver.maps.Marker({
+                map: map,
+                position: locations
+            }));
+
+            infowindows.push(new naver.maps.InfoWindow({
+                content: [
+                    '<div class="iw_inner" style="padding: 10px;">',
+                    '   <img src="{{ feed.image }}" style="width: 210px; height: 129px; border-radius: 20px; display: block; margin: 0 auto;" class="thumb" /></br>',
+                    '   <div style="font-family: Nanum Gothic Coding;font-size:20px;">{{ feed.name }}</div>',
+                    '   <p> 주소: {{ feed.address }}<br>',
+                    '       <a class="link" href="http://127.0.0.1:8001/search/?csrfmiddlewaretoken=7lmcmMjgegwasER2cbpmC5a9R3K66Ir88585PAsa7CjLaX6rMywp0SzLb6OmWWAp&kw={{ feed.name }}" style="text-decoration: none ; color: rgba(127,211,199) ; font-family: "Comic Sans MS"> Lets go</a>',
+                    '   </p>',
+                    '</div>'
+                ].join('')
+            }));
+        {% endfor %}
+    }
+
+    for (let i = 0; i < markers.length; i++) {
+        naver.maps.Event.addListener(markers[i], "click", function (e) {
+            if (infowindows[i].getMap()) {
+                infowindows[i].close();
+            } else {
+                infowindows[i].open(map, markers[i]);
+            }
+        });
+    }
+
+    // 지도 위에 표시되고 있는 마커를 모두 제거
+    function removeMarker() {
+        for (var i = 0; i < markers.length; i++) {
+            infowindows[i].close();
+            markers[i].setMap(null);
+        }
+        markers = [];
+    }
+
+
+    // 주소 입력 후 submit 연쇄 작용 시작..
+    $('#submit').on('click', function (e) {
+        e.preventDefault();
+        const address = [$('#address_start').val(), $('#address_arrive').val()]; // 최신 입력이 먼저 들어가서
+        searchAddressToCoordinate(address);
+        removeMarker();  // 제출 누르면 마커들 사라지고 길찾기 경로만 표시
+    });
+
+    //다음 포스트 코드
+    $('#address_start').on('click', function (e) {
+        new daum.Postcode({
+            oncomplete: function (data) { //선택시 입력값 세팅
+                document.getElementById("address_start").value = data.address; // 주소 넣기
+                // document.querySelector("input[name=address_detail]").focus(); //상세입력 포커싱
+            }
+        }).open({autoClose: true});
+    });
+    window.onload = function () {
+        document.getElementById("address_arrive").addEventListener("click", function () { //주소입력칸을 클릭하면
+            //카카오 지도 발생
+            new daum.Postcode({
+                oncomplete: function (data) { //선택시 입력값 세팅
+                    document.getElementById("address_arrive").value = data.address; // 주소 넣기
+                    // document.querySelector("input[name=address_detail]").focus(); //상세입력 포커싱
+                }
+            }).open({autoClose: true});
+        });
+    }
+
+    // 주소 검색하는 부분(실질적인 로직) -> insertAddress 함수로 넘겨줌.
+    function searchAddressToCoordinate(address) {
+        for (let i = 0; i < 2; i++) {
+            naver.maps.Service.geocode({
+                query: address[i]
+            }, function (status, response) {
+                if (status === naver.maps.Service.Status.ERROR) { // 그냥 서버가 에러
+                    return alert('Something Wrong!');
+                }
+                if (response.v2.meta.totalCount === 0) { //검색 결과 없을 때
+                    return alert('올바른 주소를 입력해주세요.');
+                }
+                var htmlAddresses = [],
+                    item = response.v2.addresses[0],
+                    point = new naver.maps.Point(item.x, item.y); // point 저장
+
+                if (address[i] === address[0]) {
+                    start_lon += item.x; // item.x: 경도
+                    start_lat += item.y; // item.y: 위도
+
+                } else {
+                    arrive_lon += item.x;
+                    arrive_lat += item.y;
+                }
+
+
+                if (item.roadAddress) {
+                    htmlAddresses.push('[도로명 주소]' + item.roadAddress);
+                }
+                if (item.jibunAddress) {
+                    htmlAddresses.push('[지번 주소]' + item.jibunAddress);
+                }
+                if (item.englishAddress) {
+                    htmlAddresses.push('[영문명 주소]' + item.englishAddress);
+                }
+                console.log("출발지 위경도, 목적지 위경도", start_lon, start_lat, arrive_lon, arrive_lat)
+                searchRoot(start_lon, start_lat, arrive_lon, arrive_lat);
+
+            });
+        } // 반복문 끝
+    }
+
+    async function searchRoot(a, b, c, d) {
+        //오디세이 API 호출
+        let url =
+            "https://api.odsay.com/v1/api/searchPubTransPathT?SX=" +
+            a +
+            "&SY=" +
+            b +
+            "&EX=" +
+            c +
+            "&EY=" +
+            d +
+            "&apiKey=tAVo2/qjrq9QIwIPVRbHJNhA5/dTdymsPEN3jwOgkiU";
+
+        try {
+            //길찾기 결과 가져오기
+            let res = await fetch(url);
+            let response = await res.json();
+            let path = await response.result.path;
+            console.log("길찾기 결과", path);
+
+            for (let i = 0; i <= path.length; i++) {
+                let pathtype = response.result.path[i].pathType; //경로 타입
+                let busid = response.result.path[i].subPath[1].lane[0].busID; //버스 아이디
+                let mapobj = response.result.path[i].info.mapObj; //경로 코드
+                let Infos = [];
+                let dis = response.result.path[i].info.totalDistance; //거리
+
+
+                // pathtype으로 버스인지, 지하철인지, 지하철+버스인지 구분
+                if (pathtype === 2) {  // pathtype: 2 버스
+                    let time = response.result.path[i].info.totalTime; //시간
+                    let Infos_bus = [];
+                    let busno = response.result.path[i].subPath[1].lane[0].busNo;
+                    let lowbus = await checkLowBus(busid);  // 저상버스만 가져올 것임
+                    if (lowbus === "Y") {
+                        drawMap(mapobj);
+
+                        let first_station_1 = response.result.path[i].subPath[1].startName;//첫번째 정류장
+                        let last_station_1 = response.result.path[i].subPath[1].endName; // 마지막 정류장
+                        let count_stop = response.result.path[i].info.totalStationCount;// 이동 정류장 개수
+
+                        Infos_bus.push(String(first_station_1));
+                        Infos_bus.push(String(last_station_1));
+                        Infos_bus.push(String(count_stop));
+                        Infos_bus.push(String(busno));
+                        // Infos_bus.push(String(dis)); //거리 infos[4]
+
+                        document.getElementById("first_bus").innerHTML = "저상버스: " + Infos_bus[3] + "<br>출발 정류장: " + Infos_bus[0] + "<br>도착 정류장: " + Infos_bus[1] + "<br>총 정류장 개수: " + Infos_bus[2];
+
+                        // 환승여부 확인
+                        let subPath = response.result.path[i].subPath
+                        if (subPath.length === 5) {  // 환승 있으면 subPath: 5, 환승 없으면 subPath: 3
+                            let first_station_2 = subPath[3].startName; // 환승 첫번째 정류장
+                            let last_station_2 = subPath[3].endName; // 환승 도착 정류장
+                            let busno_2 = subPath[3].lane[0].busNo; //
+                            Infos_bus.push(first_station_2);//infos[5]
+                            Infos_bus.push(last_station_2);//infos[6]
+                            Infos_bus.push(busno_2); // infos[7]
+
+                            drawNaverMarker(subPath[1].endX, subPath[1].endY);
+                            document.getElementById("second_bus").innerHTML = "환승: " + Infos_bus[6] + "<br>출발 정류장: " + Infos_bus[4] + "<br>도착 정류장: " + Infos_bus[5];
+                        }
+
+                        console.log("버스정보" + Infos_bus);
+                        break;
+                    }
+                } else if (pathtype === 1) {  // pathtype: 1 지하철
+                    drawMap(mapobj);
+
+                    let subway = response.result.path[i]
+                    let subway_dis = subway.info.totalDistance;
+                    let Infos_subway = [];
+                    Infos_subway.push(subway_dis); // 지하철 총 거리
+
+                    for (let i = 0; i < subway.subPath.length; i++) {
+                        if (subway.subPath[i].trafficType === 3) {  // trafficType: 3 도보 1: 지하철
+                            continue
+                        }
+
+                        let endName_S = subway.subPath[i].endName;
+                        let startName_S = subway.subPath[i].startName;
+                        let Sub_name = subway.subPath[i].lane[0].name;
+                        console.log("sub_name은", Sub_name);
+
+                        try {
+                            Infos_subway.push(Sub_name.substring(3));
+                            Infos_subway.push(endName_S);
+                            Infos_subway.push(startName_S);
+                        } catch (e) {
+                        }
+                    }
+                    document.getElementById("first_subway").innerHTML = "지하철:" + Infos_subway[1] + "<br>출발역: " + Infos_subway[3] + "<br>도착역: " + Infos_subway[2];
+
+                    if (Infos_subway.length === 7) {
+                        drawNaverMarker(subway.subPath[1].endX, subway.subPath[1].endY);
+                        document.getElementById("second_subway").innerHTML = "환승: " + Infos_subway[4] + "<br>출발역: " + Infos_subway[6] + "<br>도착역: " + Infos_subway[5];
+                    }
+                    break;
+
+                } else if (pathtype === 3) {  // 버스 + 지하철 종합
+                    drawMap(mapobj);
+
+                    let bus_subway = response.result.path[i]
+                    // let both_dis = bus_subway.info.totalDistance;
+                    let Infos_bus = [];
+                    let Infos_subway = [];
+                    // Infos_both.push(both_dis); // 총 거리. Infos_both[0]
+
+                    if (bus_subway.subPath.length === 5) {
+                        drawNaverMarker(bus_subway.subPath[1].endX, bus_subway.subPath[1].endY);
+                    }
+
+                    for (let i = 0; i < bus_subway.subPath.length; i++) {
+                        if (bus_subway.subPath[i].trafficType === 1) {  // trafficType: 1: 지하철 2: 버스 3 도보
+                            let endName_S = bus_subway.subPath[i].endName;
+                            let startName_S = bus_subway.subPath[i].startName;
+                            let Sub_name = bus_subway.subPath[i].lane[0].name;
+                            console.log("sub_name은", Sub_name);
+
+                            try {
+                                Infos_subway.push(Sub_name.substring(3));  // 역이름, Infos_subway[0]
+                                Infos_subway.push(endName_S);  // 도착역, Infos_subway[1]
+                                Infos_subway.push(startName_S); // 출발역, Infos_subway[2]
+
+                                document.getElementById("first_subway").innerHTML = "지하철: " + Infos_subway[0] + "<br>출발역: " + Infos_subway[2] +
+                                    "<br>도착역: " + Infos_subway[1];
+
+                            } catch (e) {
+                            }
+
+                        } else if (bus_subway.subPath[i].trafficType === 2) {
+                            let busno = response.result.path[i].subPath[i].lane[0].busNo;
+                            // let lowbus = await checkLowBus(busid);  // 저상버스만 가져올 것임---나중에
+                            // if (lowbus === "Y") {
+                            //    drawMap(mapobj);
+
+                            let first_station_1 = response.result.path[i].subPath[1].startName;//첫번째 정류장
+                            let last_station_1 = response.result.path[i].subPath[1].endName; // 마지막 정류장
+                            let count_stop = response.result.path[i].info.totalStationCount;// 이동 정류장 개수
+
+                            Infos_bus.push(String(first_station_1)); // Infos_bus[0] 첫번째 정류장
+                            Infos_bus.push(String(last_station_1)); // Infos_bus[1] 마지막 정류장
+                            Infos_bus.push(String(count_stop)); // Infos_bus[2] 이동 정류장 개수
+                            Infos_bus.push(String(busno)); // Infos_bus[3] 버스 번호
+                            // Infos_bus.push(String(dis)); //거리 infos[4]
+
+                            // 환승여부 확인
+                            document.getElementById("first_bus").innerHTML = "저상버스: " + Infos_bus[3] + "<br>출발 정류장: " + Infos_bus[0] + "<br>도착 정류장: " + Infos_bus[1]
+                                + "<br> 총 정류장 개수: " + Infos_bus[2];
+
+
+                            //} else {
+                            //    continue
+                            //}
+                        }
+                        if (Infos_subway.length === 7) {   // length로 환승 구분
+                            document.getElementById("second_subway").innerHTML = "환승: " + Infos_both[4] + "<br>출발역: " + Infos_both[6] + "<br>도착역: " + Infos_both[5];
+                        }
+                    }
+                    break;
+                }
+            }
+        } catch
+            (error) {
+            console.log(error);
+        }
+    }
+
+    // 저상버스가 있는지 확인하는 함수
+    async function checkLowBus(busID) {
+        //오디세이 API 호출
+        let url =
+            "https://api.odsay.com/v1/api/realtimeRoute?busID=" +
+            busID +
+            "&busBase=0&lowBus=1&apiKey=tAVo2/qjrq9QIwIPVRbHJNhA5/dTdymsPEN3jwOgkiU";
+
+        try {
+            //실시간 위치 정보 결과 가져오기
+            let obj = await fetch(url);
+            let object = await obj.json();
+            console.log("저상버스 결과", object);
+
+            let chk = object.result.real[0].lowBusYn; //저상버스 여부 (Y/N)
+
+            return chk;
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    // 경로 그리는 함수
+    async function drawMap(mabObj) {
+        //오디세이 API 호출
+        let url =
+            "https://api.odsay.com/v1/api/loadLane?mapObject=0:0@" +
+            mabObj +
+            "&apiKey=tAVo2/qjrq9QIwIPVRbHJNhA5/dTdymsPEN3jwOgkiU";
+
+        try {
+            //경로 중간 좌표 가져오기
+            let m = await fetch(url);
+            let ma = await m.json();
+            console.log("중간좌표", ma);
+
+            drawNaverPolyLine(ma); // 노선그래픽데이터 지도위 표시
+
+            // boundary 데이터가 있을경우, 해당 boundary로 지도이동
+            if (ma.result.boundary) {
+                var boundary = new naver.maps.LatLngBounds(
+                    new naver.maps.LatLng(
+                        ma.result.boundary.top,
+                        ma.result.boundary.left
+                    ),
+                    new naver.maps.LatLng(
+                        ma.result.boundary.bottom,
+                        ma.result.boundary.right
+                    )
+                );
+                map.panToBounds(boundary);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    // 지도위 마커 표시해주는 함수
+    function drawNaverMarker(x, y) {
+        var marker = new naver.maps.Marker({
+            position: new naver.maps.LatLng(y, x),
+            map: map,
+        });
+    }
+
+    // 노선그래픽 데이터를 이용하여 지도위 폴리라인 그려주는 함수 osrm 연결?
+    function drawNaverPolyLine(data) {
+        var path = polyline.getPath(); // 오디세이 path
+        var path_1 = []
+        for (var i = 0; i < data.result.lane.length; i++) {
+            for (var j = 0; j < data.result.lane[i].section.length; j++) {
+                for (
+                    var k = 0;
+                    k < data.result.lane[i].section[j].graphPos.length;
+                    k++
+                ) {
+                    path.push(
+                        new naver.maps.LatLng(
+                            data.result.lane[i].section[j].graphPos[k].y,
+                            data.result.lane[i].section[j].graphPos[k].x
+                        )
+                    );
+
+                    path_1.push(
+                        new naver.maps.LatLng(
+                            data.result.lane[i].section[j].graphPos[k].y,
+                            data.result.lane[i].section[j].graphPos[k].x
+                        )
+                    );
+                }
+            }
+        }
+
+        // 출발지 마커, 출발지 ~ 출발 정류장 OSRM 전달
+        // console.log('sendcoordinate start 파라미터', start_lon, start_lat, path_1[0].x, path_1[0].y);
+        drawNaverMarker(start_lon, start_lat);
+        SendCoordinate(start_lon, start_lat, path_1[0].x, path_1[0].y);
+
+        // 도착지 마커, 도착 ~ 도착 정류장 OSRM 전달
+        // console.log('sendcoordinate arrive 파라미터', arrive_lon, arrive_lat, path_1[path_1.length - 1].x, path_1[path_1.length -1].y)
+        drawNaverMarker(arrive_lon, arrive_lat);
+        SendCoordinate(arrive_lon, arrive_lat, path_1[path_1.length - 1].x, path_1[path_1.length - 1].y);
+    }
+
+    // 좌표들을 OSRM API에 보내서 waypoint, steps 좌표 얻기
+    function SendCoordinate(start_lon_1, start_lat_1, arrive_lon_1, arrive_lat_1) {
+        let path;
+
+        // start_lon_1 값이, 사용자가 입력한 전역 변수 도착지 lon이면
+        if (start_lon_1 === arrive_lon) {
+            path = polyline_2.getPath() // 도착지 ~ 정류장 path
+        } else {
+            path = polyline_1.getPath() // 출발지 ~ 정류장 path
+        }
+
+        var starter = [];
+        var finisher = [];
+        let Parms = '';
+
+        Parms += start_lon_1;
+        Parms += ',' + start_lat_1;
+        Parms += ';' + arrive_lon_1;
+        Parms += ',' + arrive_lat_1;
+        Parms += '?steps=true'
+
+        // url에 이어서 전송
+        // 지금은 도커를 이용해 local에서 백엔드 실행하고 나서야 api 호출을 할 수 있지만. 배포할 땐 aws로 상시호출가능?
+        $.ajax({
+            url: 'http://127.0.0.1:5000/route/v1/foot/' + Parms,
+            method: 'GET',
+            dataType: 'json', //서버에서 보내줄 데이터 타입
+            success: function (data) {
+                console.log('성공');
+            }
+            ,
+            error: function (request, status, error) {
+                console.log(request, status, error)
+            }
+            ,
+            complete: function () {
+                console.log("종료")
+            }
+        }).done(function (json) { // steps와 waypoints parsing, marker찍는 함수로 연결까지
+            var osrm_json = JSON.parse(JSON.stringify(json));
+            var osrm_steps = osrm_json.routes[0].legs[0].steps;
+            var osrm_waypoints = osrm_json.waypoints;
+            let osrm_duration = (osrm_json.routes[0].duration/2.7).toFixed(1)  // 전동 휠체어 속력: 2.7m/s
+            let duration_minute = (osrm_duration/60).toFixed(1)
+            let index;
+
+            // 총 거리 및 소요시간 parsing
+            if (start_lon_1 === arrive_lon) {
+                document.getElementById('arrive_walking').innerHTML = '-도착' + '<br>총 거리: ' + osrm_json.routes[0].distance + 'm'
+                    + '<br>총 소요시간: ' + duration_minute + '분'; // 도착지 ~ 정류장 path
+            } else {
+                document.getElementById('start_walking').innerHTML = '-출발' + '<br>총 거리: ' + osrm_json.routes[0].distance + 'm'
+                    + '<br>총 소요시간: ' + duration_minute + '분'; // 출발지 ~ 정류장 path
+            }
+
+
+            starter = osrm_waypoints[0].location
+            finisher = osrm_waypoints[1].location
+
+            console.log('osrm starter는 ', starter);
+            path.push(new naver.maps.LatLng(starter[1], starter[0]));
+
+            for (index = 1; index <= osrm_steps.length; index++) {
+                path.push(new naver.maps.LatLng(osrm_steps[index - 1].maneuver.location[1], osrm_steps[index - 1].maneuver.location[0]))
+            }
+
+            console.log('osrm finisher는 ', finisher);
+            path.push(new naver.maps.LatLng(finisher[1], finisher[0]));
+        });
+    }
+</script>
+</body>
+</html>
